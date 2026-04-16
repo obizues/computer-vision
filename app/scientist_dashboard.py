@@ -317,7 +317,17 @@ def build_event_segments(pred_df: pd.DataFrame, threshold: float) -> pd.DataFram
     )
     segments["duration_frames"] = segments["end_frame"] - segments["start_frame"] + expected_step
     
-    # Post-process: merge segments separated by <= 2 frames (user's close interactions)
+    # Post-process: merge nearby detections, then expand short snippets for replay usability.
+    segments = _merge_nearby_segments(segments, max_gap_frames=2)
+    frame_min = int(pred_df["frame_idx"].min()) if not pred_df.empty else None
+    frame_max = int(pred_df["frame_idx"].max()) if not pred_df.empty else None
+    segments = _expand_segments_for_replay(
+        segments,
+        min_duration_frames=18,
+        pad_frames=6,
+        frame_min=frame_min,
+        frame_max=frame_max,
+    )
     segments = _merge_nearby_segments(segments, max_gap_frames=2)
     
     return segments
@@ -376,7 +386,79 @@ def build_distance_segments(
     )
     segments["duration_frames"] = segments["end_frame"] - segments["start_frame"] + expected_step
     segments = _merge_nearby_segments(segments, max_gap_frames=2)
+    frame_min = int(valid["frame_idx"].min()) if not valid.empty else None
+    frame_max = int(valid["frame_idx"].max()) if not valid.empty else None
+    segments = _expand_segments_for_replay(
+        segments,
+        min_duration_frames=18,
+        pad_frames=6,
+        frame_min=frame_min,
+        frame_max=frame_max,
+    )
+    segments = _merge_nearby_segments(segments, max_gap_frames=2)
     return segments
+
+
+def _expand_segments_for_replay(
+    segments_df: pd.DataFrame,
+    min_duration_frames: int = 18,
+    pad_frames: int = 6,
+    frame_min: int | None = None,
+    frame_max: int | None = None,
+) -> pd.DataFrame:
+    def _coerce_int(value: object, default: int = 0) -> int:
+        coerced = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+        if pd.isna(coerced):
+            return default
+        try:
+            return int(coerced)
+        except (TypeError, ValueError):
+            return default
+
+    if segments_df.empty:
+        return segments_df
+
+    expanded = segments_df.copy().sort_values("start_frame").reset_index(drop=True)
+    min_duration_frames = max(1, int(min_duration_frames))
+    pad_frames = max(0, int(pad_frames))
+    expanded["start_frame"] = pd.to_numeric(expanded["start_frame"], errors="coerce").fillna(0).astype(int)
+    expanded["end_frame"] = pd.to_numeric(expanded["end_frame"], errors="coerce").fillna(0).astype(int)
+
+    for idx in range(len(expanded)):
+        start_frame = _coerce_int(expanded.at[idx, "start_frame"]) - pad_frames
+        end_frame = _coerce_int(expanded.at[idx, "end_frame"]) + pad_frames
+
+        if frame_min is not None:
+            start_frame = max(int(frame_min), start_frame)
+        if frame_max is not None:
+            end_frame = min(int(frame_max), end_frame)
+
+        duration = end_frame - start_frame + 1
+        if duration < min_duration_frames:
+            deficit = min_duration_frames - duration
+            left_extra = deficit // 2
+            right_extra = deficit - left_extra
+            start_frame -= left_extra
+            end_frame += right_extra
+            if frame_min is not None and start_frame < int(frame_min):
+                shift = int(frame_min) - start_frame
+                start_frame = int(frame_min)
+                end_frame += shift
+            if frame_max is not None and end_frame > int(frame_max):
+                shift = end_frame - int(frame_max)
+                end_frame = int(frame_max)
+                start_frame -= shift
+            if frame_min is not None:
+                start_frame = max(int(frame_min), start_frame)
+            if frame_max is not None:
+                end_frame = min(int(frame_max), end_frame)
+
+        expanded.at[idx, "start_frame"] = int(start_frame)
+        expanded.at[idx, "end_frame"] = int(end_frame)
+        expanded.at[idx, "duration_frames"] = int(end_frame) - int(start_frame) + 1
+
+    expanded["segment_id"] = range(1, len(expanded) + 1)
+    return expanded
 
 
 def _merge_nearby_segments(segments_df: pd.DataFrame, max_gap_frames: int = 2) -> pd.DataFrame:
