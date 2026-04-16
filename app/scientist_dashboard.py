@@ -603,24 +603,45 @@ def find_precomputed_clip(
         if clip_path.exists() and clip_path.stat().st_size > 0:
             return clip_path
 
-    # Fallback: any precomputed clip for this segment/mode (useful when
-    # precomputed frame span/context differs from currently selected span).
-    fallback_candidates = sorted(
-        [
-            path
-            for path in segments_dir.glob(f"segment_{segment_id}_{mode_tag}_*.webm")
-            if path.is_file() and path.stat().st_size > 0
-        ]
-        + [
-            path
-            for path in segments_dir.glob(f"segment_{segment_id}_{mode_tag}_*.mp4")
-            if path.is_file() and path.stat().st_size > 0
-        ],
-        key=lambda p: p.stat().st_size,
-        reverse=True,
+    # Fallback: choose the precomputed clip whose frame span is closest to the
+    # requested span, while preferring clips with >= 8 frames when available.
+    target_len = max(1, int(clip_end) - int(clip_start) + 1)
+    min_reasonable_len = 8
+
+    parsed_candidates: list[tuple[Path, int, int, int]] = []
+    pattern = re.compile(
+        rf"^segment_{segment_id}_{mode_tag}_ctx(\d+)_(\d+)_(\d+)\.(?:webm|mp4)$"
     )
-    if fallback_candidates:
-        return fallback_candidates[0]
+
+    for path in list(segments_dir.glob(f"segment_{segment_id}_{mode_tag}_*.webm")) + list(
+        segments_dir.glob(f"segment_{segment_id}_{mode_tag}_*.mp4")
+    ):
+        if not path.is_file() or path.stat().st_size <= 0:
+            continue
+        match = pattern.match(path.name)
+        if match is None:
+            continue
+        ctx_val = int(match.group(1))
+        start_val = int(match.group(2))
+        end_val = int(match.group(3))
+        parsed_candidates.append((path, ctx_val, start_val, end_val))
+
+    if not parsed_candidates:
+        return None
+
+    long_enough = [
+        item for item in parsed_candidates if (item[3] - item[2] + 1) >= min_reasonable_len
+    ]
+    pool = long_enough if long_enough else parsed_candidates
+
+    def candidate_score(item: tuple[Path, int, int, int]) -> tuple[int, int, int]:
+        _path, ctx_val, start_val, end_val = item
+        clip_len = max(1, end_val - start_val + 1)
+        return (abs(clip_len - target_len), abs(ctx_val - context_frames), ctx_val)
+
+    best = min(pool, key=candidate_score)
+    if best:
+        return best[0]
     return None
 
 
@@ -979,8 +1000,13 @@ with tab_replay:
             start_frame = int(selected_segment["start_frame"])
             end_frame = int(selected_segment["end_frame"])
             both_span = find_both_mice_span(pose_index, start_frame, end_frame)
+            min_visible_span_frames = 8
             if both_span is not None:
-                start_frame, end_frame = both_span
+                both_start, both_end = both_span
+                both_len = int(both_end) - int(both_start) + 1
+                # Avoid collapsing playback to 1-3 frame clips.
+                if both_len >= min_visible_span_frames:
+                    start_frame, end_frame = both_start, both_end
 
             # Fixed replay defaults for demo clarity: Overlay + Segment only
             clip_context_frames = 0
