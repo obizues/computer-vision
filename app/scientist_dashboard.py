@@ -603,10 +603,17 @@ def find_precomputed_clip(
         if clip_path.exists() and clip_path.stat().st_size > 0:
             return clip_path
 
+    # Legacy exact format support: segment_<id>_<start>_<end>_<mode>.<ext>
+    for suffix in [".webm", ".mp4"]:
+        legacy_path = segments_dir / f"segment_{segment_id}_{clip_start}_{clip_end}_{mode_tag}{suffix}"
+        if legacy_path.exists() and legacy_path.stat().st_size > 0:
+            return legacy_path
+
     # Fallback: choose the precomputed clip whose frame span is closest to the
-    # requested span, while preferring clips with >= 8 frames when available.
+    # requested span, but keep context strict and reject oversized alternatives.
     target_len = max(1, int(clip_end) - int(clip_start) + 1)
     min_reasonable_len = 8
+    max_allowed_len = max(12, target_len * 3)
 
     parsed_candidates: list[tuple[Path, int, int, int]] = []
     pattern = re.compile(
@@ -624,7 +631,31 @@ def find_precomputed_clip(
         ctx_val = int(match.group(1))
         start_val = int(match.group(2))
         end_val = int(match.group(3))
+        if ctx_val != int(context_frames):
+            continue
+        clip_len = max(1, end_val - start_val + 1)
+        if clip_len > max_allowed_len:
+            continue
         parsed_candidates.append((path, ctx_val, start_val, end_val))
+
+    # Legacy fallback: segment_<id>_<start>_<end>_<mode>.<ext>
+    legacy_pattern = re.compile(
+        rf"^segment_{segment_id}_(\d+)_(\d+)_{mode_tag}\.(?:webm|mp4)$"
+    )
+    for path in list(segments_dir.glob(f"segment_{segment_id}_*_{mode_tag}.webm")) + list(
+        segments_dir.glob(f"segment_{segment_id}_*_{mode_tag}.mp4")
+    ):
+        if not path.is_file() or path.stat().st_size <= 0:
+            continue
+        match = legacy_pattern.match(path.name)
+        if match is None:
+            continue
+        start_val = int(match.group(1))
+        end_val = int(match.group(2))
+        clip_len = max(1, end_val - start_val + 1)
+        if clip_len > max_allowed_len:
+            continue
+        parsed_candidates.append((path, int(context_frames), start_val, end_val))
 
     if not parsed_candidates:
         return None
