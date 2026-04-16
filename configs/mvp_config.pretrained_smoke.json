@@ -48,7 +48,7 @@
     "view": "top",
     "keypoints_per_mouse": 7,
     "target_strategy": "proxy_close_interaction_quantile",
-    "close_interaction_quantile": 0.25
+    "close_interaction_quantile": 0.07
   },
   "label_stage": {
     "ground_truth_labels_file": "data/processed/behavior_labels.csv",
