@@ -924,7 +924,9 @@ with tab_replay:
             if not ok:
                 st.error(message)
     else:
-        st.warning("No local videos found in data/raw_videos.")
+        st.warning(
+            "No local videos found in data/raw_videos. For full replay and pipeline controls, run this project locally and place a video in data/raw_videos (or use launch_mvp.bat)."
+        )
 
     # ── Run Pipeline button ───────────────────────────────────────────────────
     pipeline_running = (
@@ -945,7 +947,10 @@ with tab_replay:
                 launch_pipeline()
                 st.rerun()
     if demo_mode and not pipeline_running:
-        st.info("Demo mode is enabled for hosted viewing. Pipeline execution is disabled in this app instance.")
+        st.info(
+            "Demo mode is enabled for hosted viewing, so pipeline execution is disabled in this app instance. "
+            "To run ingestion, training, and scoring end-to-end, use the local setup from README and launch the pipeline locally."
+        )
 
     # Drain any pending log lines from the background thread
     if "pipeline_log_q" in st.session_state:
