@@ -70,6 +70,24 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     out["neck_dist"] = np.hypot(out["b_neck_x"] - out["w_neck_x"], out["b_neck_y"] - out["w_neck_y"])
     out["tail_dist"] = np.hypot(out["b_tail_x"] - out["w_tail_x"], out["b_tail_y"] - out["w_tail_y"])
 
+    # Nose-to-any-point distances (either mouse nose to any keypoint on the other mouse)
+    out["b_nose_to_w_nose_dist"] = np.hypot(out["b_nose_x"] - out["w_nose_x"], out["b_nose_y"] - out["w_nose_y"])
+    out["b_nose_to_w_neck_dist"] = np.hypot(out["b_nose_x"] - out["w_neck_x"], out["b_nose_y"] - out["w_neck_y"])
+    out["b_nose_to_w_tail_dist"] = np.hypot(out["b_nose_x"] - out["w_tail_x"], out["b_nose_y"] - out["w_tail_y"])
+    out["w_nose_to_b_nose_dist"] = np.hypot(out["w_nose_x"] - out["b_nose_x"], out["w_nose_y"] - out["b_nose_y"])
+    out["w_nose_to_b_neck_dist"] = np.hypot(out["w_nose_x"] - out["b_neck_x"], out["w_nose_y"] - out["b_neck_y"])
+    out["w_nose_to_b_tail_dist"] = np.hypot(out["w_nose_x"] - out["b_tail_x"], out["w_nose_y"] - out["b_tail_y"])
+    out["nose_to_any_dist"] = out[
+        [
+            "b_nose_to_w_nose_dist",
+            "b_nose_to_w_neck_dist",
+            "b_nose_to_w_tail_dist",
+            "w_nose_to_b_nose_dist",
+            "w_nose_to_b_neck_dist",
+            "w_nose_to_b_tail_dist",
+        ]
+    ].min(axis=1)
+
     out["b_body_len"] = np.hypot(out["b_nose_x"] - out["b_tail_x"], out["b_nose_y"] - out["b_tail_y"])
     out["w_body_len"] = np.hypot(out["w_nose_x"] - out["w_tail_x"], out["w_nose_y"] - out["w_tail_y"])
 
@@ -123,10 +141,11 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_proxy_label(df: pd.DataFrame, quantile: float) -> tuple[pd.DataFrame, float, str]:
     out = df.copy()
-    threshold = float(out["nose_dist"].quantile(quantile))
-    out["is_close_interaction"] = (out["nose_dist"] <= threshold).astype(int)
+    distance_col = "nose_to_any_dist" if "nose_to_any_dist" in out.columns else "nose_dist"
+    threshold = float(out[distance_col].quantile(quantile))
+    out["is_close_interaction"] = (out[distance_col] <= threshold).astype(int)
 
-    strategy_used = "quantile_nose_distance"
+    strategy_used = f"quantile_{distance_col}"
     if int(out["is_close_interaction"].nunique()) < 2:
         out["is_close_interaction"] = (out["frame_idx"] % 2).astype(int)
         strategy_used = "fallback_frame_parity"

@@ -1,12 +1,12 @@
 {
   "rows": 900,
-  "null_cells": 17697,
+  "null_cells": 23611,
   "out_of_bounds_x": 0,
   "out_of_bounds_y": 0,
-  "close_threshold_px": 319.2050228034338,
-  "label_strategy_used": "quantile_nose_distance",
+  "close_threshold_px": 0.0,
+  "label_strategy_used": "quantile_nose_to_any_dist",
   "ground_truth_strategy_used": "proxy_only_missing_label_file",
   "ground_truth_rows": 0,
   "ground_truth_matches": 0,
-  "generated_at_utc": "2026-04-16T18:48:53.854741+00:00"
+  "generated_at_utc": "2026-04-16T19:53:41.879093+00:00"
 }
