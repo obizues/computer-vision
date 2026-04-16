@@ -123,16 +123,10 @@ def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_proxy_label(df: pd.DataFrame, quantile: float) -> tuple[pd.DataFrame, float, str]:
     out = df.copy()
-    valid_nose_dist = out.loc[out["nose_dist"].notna() & (out["nose_dist"] > 0), "nose_dist"]
+    threshold = float(out["nose_dist"].quantile(quantile))
+    out["is_close_interaction"] = (out["nose_dist"] <= threshold).astype(int)
 
     strategy_used = "quantile_nose_distance"
-    if valid_nose_dist.empty:
-        out["is_close_interaction"] = (out["frame_idx"] % 2).astype(int)
-        return out, 0.0, "fallback_frame_parity_no_valid_distances"
-
-    threshold = float(valid_nose_dist.quantile(quantile))
-    out["is_close_interaction"] = ((out["nose_dist"] > 0) & (out["nose_dist"] <= threshold)).astype(int)
-
     if int(out["is_close_interaction"].nunique()) < 2:
         out["is_close_interaction"] = (out["frame_idx"] % 2).astype(int)
         strategy_used = "fallback_frame_parity"

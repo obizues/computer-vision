@@ -1,0 +1,82 @@
+{
+  "generated_at_utc": "2026-04-16T18:48:54.766632+00:00",
+  "model_type": "gradient_boosting",
+  "split_method": "temporal",
+  "features": [
+    "nose_dist",
+    "neck_dist",
+    "tail_dist",
+    "min_pairwise_dist",
+    "b_body_len",
+    "w_body_len",
+    "b_facing_toward_w",
+    "w_facing_toward_b",
+    "b_nose_speed",
+    "w_nose_speed",
+    "nose_approach_velocity",
+    "relative_dist_change",
+    "nose_dist_roll5_mean",
+    "nose_dist_roll5_min",
+    "nose_dist_roll5_std",
+    "approach_in_window"
+  ],
+  "target": "is_close_interaction",
+  "auc": 1.0,
+  "train_size": 675,
+  "test_size": 225,
+  "confusion_matrix": [
+    [
+      223,
+      0
+    ],
+    [
+      0,
+      2
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 223.0
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 225.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 225.0
+    }
+  },
+  "feature_importance": {
+    "nose_dist": 0.9999999810045995,
+    "neck_dist": 6.389680732168921e-11,
+    "tail_dist": 1.2218370643441823e-09,
+    "min_pairwise_dist": 3.8668973861880975e-09,
+    "b_body_len": 1.1063735051374714e-09,
+    "w_body_len": 1.279270805489111e-10,
+    "b_facing_toward_w": 2.919385880727604e-10,
+    "w_facing_toward_b": 4.43192962749892e-11,
+    "b_nose_speed": 1.3753756352101467e-11,
+    "w_nose_speed": 0.0,
+    "nose_approach_velocity": 0.0,
+    "relative_dist_change": 0.0,
+    "nose_dist_roll5_mean": 6.7192866325326835e-09,
+    "nose_dist_roll5_min": 5.539170382633124e-09,
+    "nose_dist_roll5_std": 0.0,
+    "approach_in_window": 0.0
+  }
+}
