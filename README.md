@@ -243,6 +243,15 @@ Use this when you want a clean hosted experience for reviewers.
 
 When `MOUSE_VISION_DEMO_MODE=1`, the dashboard disables in-app pipeline execution and acts as a stable viewer for precomputed artifacts.
 
+Hosted sample video (for local pipeline runs):
+
+- https://github.com/obizues/computer-vision/releases/download/video-assets-v1/mars_top_dataset_sample.mp4
+
+Notes:
+
+- Streamlit hosted mode is intended for viewing precomputed results, not running full DLC inference in-app.
+- Local runtime can still auto-download this sample video using `pose_inference_runtime.video_url` if `video_file` is missing.
+
 ### 4) Reviewer walkthrough (30–60 seconds)
 
 - Open Event Replay tab
