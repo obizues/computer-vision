@@ -894,7 +894,7 @@ pred_df: pd.DataFrame = _load_predictions(pred_path)
 features_df: pd.DataFrame = _load_features(OUT)
 
 # ── tabs ──────────────────────────────────────────────────────────────────────
-tab_replay, tab_analytics, tab_artifacts = st.tabs(["Event Replay", "Analytics & Details", "Artifacts"])
+tab_replay, tab_analytics = st.tabs(["Event Replay", "Analytics & Details"])
 
 # ═════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Event Replay
@@ -1357,59 +1357,3 @@ with tab_analytics:
         with st.expander("Event table", expanded=False):
             st.dataframe(_segments_df, width="stretch")
 
-# ═════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Artifacts
-# ═════════════════════════════════════════════════════════════════════════════
-with tab_artifacts:
-    if not pred_df.empty:
-        with st.expander("Prediction rows (first 200)", expanded=False):
-            st.dataframe(pred_df.head(200), width="stretch")
-
-        if "y_proba_close" in pred_df.columns:
-            with st.expander("Probability distribution", expanded=False):
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.hist(pred_df["y_proba_close"], bins=30)
-                ax.set_xlabel("y_proba_close")
-                ax.set_ylabel("Count")
-                ax.set_title("Prediction Probability Distribution")
-                st.pyplot(fig)
-
-    if overlay_path.exists():
-        st.subheader("Pose Overlay Preview")
-        st.video(overlay_path.read_bytes(), format="video/mp4")
-        st.caption("Green filled dots: black mouse keypoints · Orange rings: white mouse keypoints (rings overlap green dots when mice are co-located)")
-
-        if pose_index:
-            with st.expander("Overlay frame gallery", expanded=False):
-                available = sorted(pose_index.keys())
-                sample_positions = [0.0, 0.25, 0.5, 0.75, 0.99]
-                sample_frames = [available[int(pos * (len(available) - 1))] for pos in sample_positions if available]
-
-                gallery_pairs = []
-                for frame_id in sample_frames:
-                    rec = pose_index.get(frame_id)
-                    if rec is None:
-                        continue
-                    raw_rgb = load_frame_rgb(rec, int(frame_id), source_video)
-                    if raw_rgb is None:
-                        continue
-                    ov_rgb = raw_rgb.copy()
-                    draw_pose_overlay(ov_rgb, rec)
-                    gallery_pairs.append((raw_rgb, ov_rgb, int(frame_id)))
-
-                if gallery_pairs:
-                    cols = st.columns(len(gallery_pairs) * 2)
-                    for i, (raw_rgb, ov_rgb, frame_id) in enumerate(gallery_pairs):
-                        cols[i * 2].image(raw_rgb, caption=f"frame {frame_id} — raw", width="stretch")
-                        cols[i * 2 + 1].image(ov_rgb, caption=f"frame {frame_id} — overlay", width="stretch")
-
-    with st.expander("Output files", expanded=False):
-        for path in sorted(OUT.glob("*")):
-            st.write(f"- {path.name}")
-
-    if RUN_REGISTRY.exists():
-        with st.expander("Run Registry", expanded=False):
-            lines = [json.loads(line) for line in RUN_REGISTRY.read_text(encoding="utf-8").splitlines() if line.strip()]
-            if lines:
-                reg_df = pd.DataFrame(lines)
-                st.dataframe(reg_df.tail(20), width="stretch")
