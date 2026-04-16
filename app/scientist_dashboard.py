@@ -584,6 +584,27 @@ def is_demo_mode() -> bool:
     return False
 
 
+def find_precomputed_clip(
+    segment_id: int,
+    mode_tag: str,
+    clip_start: int,
+    clip_end: int,
+    context_frames: int = 0,
+) -> Path | None:
+    """Look for precomputed segment clip before trying to generate it.
+    Clips should be in data/eda_outputs/segments/ from pipeline run."""
+    segments_dir = OUT / "segments"
+    if not segments_dir.exists():
+        return None
+    
+    # Try common video formats
+    for suffix in [".webm", ".mp4"]:
+        clip_path = segments_dir / f"segment_{segment_id}_{mode_tag}_ctx{context_frames}_{clip_start}_{clip_end}{suffix}"
+        if clip_path.exists() and clip_path.stat().st_size > 0:
+            return clip_path
+    return None
+
+
 def build_segment_clip(
     source_video_path: Path,
     pose_index: dict[int, dict],
@@ -948,24 +969,43 @@ with tab_replay:
             segment_overlay_clip_path = None
             segment_raw_clip_path = None
             if source_video_path is not None and source_video_path.exists() and pose_index:
-                segment_overlay_clip_path = build_segment_clip(
-                    source_video_path=source_video_path,
-                    pose_index=pose_index,
+                # First, try to find precomputed clips (generated during pipeline run)
+                segment_overlay_clip_path = find_precomputed_clip(
                     segment_id=selected_segment_id,
-                    start_frame=start_frame,
-                    end_frame=end_frame,
-                    with_pose_overlay=True,
+                    mode_tag="overlay",
+                    clip_start=start_frame,
+                    clip_end=end_frame,
                     context_frames=clip_context_frames,
                 )
-                segment_raw_clip_path = build_segment_clip(
-                    source_video_path=source_video_path,
-                    pose_index=pose_index,
+                segment_raw_clip_path = find_precomputed_clip(
                     segment_id=selected_segment_id,
-                    start_frame=start_frame,
-                    end_frame=end_frame,
-                    with_pose_overlay=False,
+                    mode_tag="raw",
+                    clip_start=start_frame,
+                    clip_end=end_frame,
                     context_frames=clip_context_frames,
                 )
+                
+                # If precomputed clips not found and cv2 is available, try to build them
+                if segment_overlay_clip_path is None and cv2 is not None:
+                    segment_overlay_clip_path = build_segment_clip(
+                        source_video_path=source_video_path,
+                        pose_index=pose_index,
+                        segment_id=selected_segment_id,
+                        start_frame=start_frame,
+                        end_frame=end_frame,
+                        with_pose_overlay=True,
+                        context_frames=clip_context_frames,
+                    )
+                if segment_raw_clip_path is None and cv2 is not None:
+                    segment_raw_clip_path = build_segment_clip(
+                        source_video_path=source_video_path,
+                        pose_index=pose_index,
+                        segment_id=selected_segment_id,
+                        start_frame=start_frame,
+                        end_frame=end_frame,
+                        with_pose_overlay=False,
+                        context_frames=clip_context_frames,
+                    )
 
             # Videos area (first): fixed overlay-only replay
             if segment_overlay_clip_path is not None and segment_overlay_clip_path.exists():

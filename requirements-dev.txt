@@ -1,0 +1,6 @@
+# Development dependencies (local machine)
+# Install with: pip install -r requirements-dev.txt
+# This includes cv2 for video processing and overlay generation
+
+-r requirements.txt
+opencv-python-headless>=4.8.0

@@ -48,6 +48,13 @@ source .venv/bin/activate
 
 ### 3. Install dependencies
 
+**For local development (running pipeline + dashboard):**
+```bash
+pip install --upgrade pip
+pip install -r requirements-dev.txt
+```
+
+**For Streamlit Cloud deployment (viewer only):**
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -55,8 +62,14 @@ pip install -r requirements.txt
 
 ### 4. Verify installation
 
+**Local development:**
 ```bash
 python -c "import pandas, sklearn, cv2, streamlit; print('✓ All dependencies installed')"
+```
+
+**Streamlit Cloud (cv2 optional):**
+```bash
+python -c "import pandas, sklearn, streamlit; print('✓ Essential dependencies installed')"
 ```
 
 ---
@@ -158,6 +171,47 @@ When demo mode is enabled:
 - **"Run Full Pipeline" button is hidden**
 - Dashboard acts as a **viewer-only** interface for precomputed artifacts
 - Safe for Streamlit Community Cloud or shared hosting
+
+---
+
+## Streamlit Cloud Deployment Workflow
+
+### Why we separate `requirements.txt` and `requirements-dev.txt`
+
+- **`requirements.txt`**: Used by Streamlit Cloud. Contains only essential packages. Does **not** include OpenCV (cv2) because Streamlit Cloud's build environment lacks required system libraries (e.g., libGL.so.1).
+- **`requirements-dev.txt`**: Used for local development. Includes OpenCV to generate overlay videos during pipeline execution.
+
+### Deployment Steps
+
+1. **Run the full pipeline locally** (with cv2 available):
+   ```bash
+   pip install -r requirements-dev.txt
+   python scripts/run_pipeline.py --config configs/mvp_config.json
+   ```
+   This generates:
+   - `data/eda_outputs/batch_predictions.csv` (model predictions)
+   - `data/eda_outputs/segments/*.webm` (video clips with pose overlays)
+   - `data/run_registry.jsonl` (execution log)
+
+2. **Commit precomputed artifacts to Git**:
+   ```bash
+   git add data/eda_outputs/batch_predictions.csv data/eda_outputs/segments/ data/run_registry.jsonl
+   git commit -m "refactor: add latest pipeline artifacts for Streamlit demo"
+   git push
+   ```
+
+3. **Deploy to Streamlit Cloud**:
+   - Connect your GitHub repo to Streamlit Community Cloud
+   - Set environment variable: `MOUSE_VISION_DEMO_MODE=1`
+   - Streamlit will install `requirements.txt` (no cv2 needed)
+   - App will load precomputed videos and predictions
+
+### Key Insight
+
+The dashboard **first looks for precomputed clips** in `data/eda_outputs/segments/`, then only tries to generate them if cv2 is available. This means:
+- **Streamlit Cloud**: Serves precomputed clips (no cv2 needed)
+- **Local with cv2**: Can generate clips on-demand or use precomputed ones
+- **Local without cv2**: Uses precomputed clips from a prior pipeline run
 
 ---
 
