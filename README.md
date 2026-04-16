@@ -16,6 +16,26 @@ Build enough hands-on understanding that you can discuss:
 
 ## Quick Start (5 minutes)
 
+### One-command local setup (recommended)
+
+If you want the fastest path to run locally with guided options:
+
+1. Open a terminal in the project root
+2. Run:
+
+```bash
+.\launch_mvp.bat
+```
+
+Then choose:
+
+- **1** to download required data
+- **2** to run the full pipeline
+- **3** to open the dashboard
+- **4** to do all steps in sequence
+
+This gives a complete local flow for users who want to reproduce results and run the PoC on their own machine.
+
 ### I want to...
 
 | Task | Go to |
