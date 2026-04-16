@@ -978,11 +978,8 @@ with tab_replay:
 
     if demo_mode:
         st.info(
-            "Hosted demo view: this page shows precomputed mouse interaction events. "
-            "Event rule used here: we flag an interaction when either mouse's nose is near any keypoint on the other mouse (black→white or white→black). "
-            "What you are seeing: (1) replay clip with pose overlay, (2) probability trace for that event window, "
-            "and (3) frame-level raw vs overlay views in Analytics. "
-            "To run ingestion + training + scoring end-to-end, run locally from GitHub."
+            "Demo mode: this hosted app only shows pipeline results that were already generated. "
+            "To run the full pipeline yourself, clone from GitHub and run locally."
         )
 
     configured_video = str(CFG.get("pose_inference_runtime", {}).get("video_file", "")).strip()
@@ -1209,9 +1206,8 @@ with tab_replay:
 
             # Videos area (first): fixed overlay-only replay
             st.caption(
-                "Replay view: pose-overlay event clip for the selected segment. "
-                "Interaction means either mouse's nose is near any keypoint on the other mouse (symmetric black/white). "
-                "Use the selector below to switch detected events."
+                "Below are video segments the model flagged as likely social interaction between the two mice. "
+                "The video shows pose overlay, and the chart below shows model confidence for the same segment."
             )
             if segment_overlay_clip_path is not None and segment_overlay_clip_path.exists():
                 st.video(
