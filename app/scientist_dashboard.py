@@ -975,6 +975,7 @@ with tab_replay:
     if demo_mode:
         st.info(
             "Hosted demo view: this page shows precomputed mouse interaction events. "
+            "Event rule used here: we flag an interaction when either mouse's nose is near the other mouse (black→white or white→black). "
             "What you are seeing: (1) replay clip with pose overlay, (2) probability trace for that event window, "
             "and (3) frame-level raw vs overlay views in Analytics. "
             "To run ingestion + training + scoring end-to-end, run locally from GitHub."
@@ -1131,7 +1132,7 @@ with tab_replay:
                 segments_df = filtered_segments_df
 
         if not segments_df.empty:
-            segments_df = segments_df.sort_values(["peak_proba", "num_frames"], ascending=[False, False]).reset_index(drop=True)
+            segments_df = segments_df.sort_values(["start_frame", "end_frame"], ascending=[True, True]).reset_index(drop=True)
             segments_df["segment_id"] = range(1, len(segments_df) + 1)
 
         if segments_df.empty:
@@ -1205,6 +1206,7 @@ with tab_replay:
             # Videos area (first): fixed overlay-only replay
             st.caption(
                 "Replay view: pose-overlay event clip for the selected segment. "
+                "Interaction means either mouse's nose is near the other mouse (symmetric black/white). "
                 "Use the selector below to switch detected events."
             )
             if segment_overlay_clip_path is not None and segment_overlay_clip_path.exists():
