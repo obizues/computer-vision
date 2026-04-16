@@ -44,6 +44,11 @@ def main() -> None:
         action="store_true",
         help="Download and extract raw top-view MARS image frames (large download)",
     )
+    parser.add_argument(
+        "--include-sample-video",
+        action="store_true",
+        help="Download the configured sample video from pose_inference_runtime.video_url",
+    )
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -69,6 +74,14 @@ def main() -> None:
         out_dir = Path(raw_top_dir)
         print(download(raw_top_url, zip_path, overwrite=args.overwrite))
         print(extract_zip(zip_path, out_dir, overwrite=args.overwrite))
+
+    if args.include_sample_video:
+        runtime_cfg = cfg.get("pose_inference_runtime", {})
+        video_url = str(runtime_cfg.get("video_url", "")).strip()
+        video_file = str(runtime_cfg.get("video_file", "")).strip()
+        if not video_url or not video_file:
+            raise SystemExit("pose_inference_runtime.video_url and pose_inference_runtime.video_file must be set")
+        print(download(video_url, Path(video_file), overwrite=args.overwrite))
 
 
 if __name__ == "__main__":

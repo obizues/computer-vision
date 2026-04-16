@@ -133,6 +133,8 @@ The download step is safe to rerun and skips files that already exist.
 
 `--include-raw-images-top` downloads and extracts real MARS top-view mouse frames (large file) so the dashboard can display real raw frames beside keypoint overlays.
 
+`--include-sample-video` downloads the hosted sample video to `pose_inference_runtime.video_file` using `pose_inference_runtime.video_url` from config.
+
 This executes:
 
 1. `scripts/build_features.py`
@@ -163,6 +165,8 @@ Supported placeholders:
 - `{video}` selected input video path
 - `{output}` canonical pose JSON output path (`pose_stage.external_pose_file`)
 - `{config}` active config path
+
+If `pose_inference_runtime.video_file` is missing locally and `pose_inference_runtime.video_url` is set, runtime auto-downloads the video before inference. If `pose_inference_runtime.video_sha256` is set, the download is verified before running.
 
 DeepLabCut runtime helper:
 

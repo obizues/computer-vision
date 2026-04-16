@@ -90,6 +90,14 @@ python scripts/train_eval.py --config configs/mvp_config.json
 python scripts/predict_batch.py --config configs/mvp_config.json
 ```
 
+For `continuous_video_external_inference` mode, set these in config:
+
+- `pose_inference_runtime.video_file`: local target path
+- `pose_inference_runtime.video_url`: hosted downloadable URL
+- `pose_inference_runtime.video_sha256`: optional integrity check
+
+If `video_file` is missing, runtime automatically downloads from `video_url` before executing the inference command.
+
 ### Pipeline stages (order matters)
 
 1. **Pose Ingestion** (`video_to_pose.py`) — Extracts or loads pose keypoints from video/JSON

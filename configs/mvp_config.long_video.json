@@ -25,6 +25,8 @@
   },
   "pose_inference_runtime": {
     "video_file": "data/raw_videos/mars_top_dataset_sample.mp4",
+    "video_url": "https://github.com/obizues/computer-vision/releases/download/video-assets-v1/mars_top_dataset_sample.mp4",
+    "video_sha256": "cd14979adc11169aa778c54830d7db177537634d2f44075707d26112fad3afcc",
     "command": "\".venv-dlc/Scripts/python.exe\" scripts/external_pose_inference_dlc.py --config \"{config}\" --video \"{video}\" --output \"{output}\"",
     "dlc_command": "\".venv-dlc/Scripts/python.exe\" scripts/external_pose_inference_dlc.py --config \"{config}\" --video \"{video}\" --output \"{output}\"",
     "dlc": {

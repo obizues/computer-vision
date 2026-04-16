@@ -25,6 +25,8 @@
   },
   "pose_inference_runtime": {
     "video_file": "data/raw_videos/mars_top_dataset_sample.mp4",
+    "video_url": "https://github.com/obizues/computer-vision/releases/download/video-assets-v1/mars_top_dataset_sample.mp4",
+    "video_sha256": "cd14979adc11169aa778c54830d7db177537634d2f44075707d26112fad3afcc",
     "command": "\".venv-dlc/Scripts/python.exe\" scripts/external_pose_inference_dlc.py --config \"{config}\" --video \"{video}\" --output \"{output}\"",
     "dlc_command": "\".venv-dlc/Scripts/python.exe\" scripts/external_pose_inference_dlc.py --config \"{config}\" --video \"{video}\" --output \"{output}\"",
     "dlc": {
@@ -40,7 +42,7 @@
       "pretrained_batch_size": 8,
       "mask_radius": 140
     },
-    "notes": "Used only when pose_stage.mode = continuous_video_external_inference. Command supports placeholders {video}, {output}, {config}. This command runs DeepLabCut inference and converts DLC CSV output to canonical pose JSON. Set pose_inference_runtime.dlc.project_config before running."
+    "notes": "Used only when pose_stage.mode = continuous_video_external_inference. If video_file is missing locally and video_url is set, runtime auto-downloads and verifies video_sha256. Command supports placeholders {video}, {output}, {config}. This command runs DeepLabCut inference and converts DLC CSV output to canonical pose JSON. Set pose_inference_runtime.dlc.project_config before running."
   },
   "feature_build": {
     "view": "top",
