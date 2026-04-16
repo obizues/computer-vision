@@ -12,7 +12,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
@@ -98,6 +102,8 @@ def _valid_pt(x, y) -> tuple[int, int] | None:
 def draw_pose_overlay(frame, rec: dict) -> None:
     """Draw keypoints for both mice.  Black mouse = filled lime-green circle.
     White mouse = open orange ring slightly larger, so both show when overlapping."""
+    if cv2 is None:
+        return
     black = rec["coords"]["black"]
     white = rec["coords"]["white"]
     # Black mouse: filled lime-green dot (radius 5)
@@ -239,6 +245,8 @@ def find_both_mice_span(
 @st.cache_data(max_entries=300, show_spinner=False)
 def _cached_load_frame_rgb(source_video: str, frame_idx: int):
     """Load a single frame from disk; cached by (source_video, frame_idx)."""
+    if cv2 is None:
+        return None
     source_video_path = Path(source_video)
     if source_video_path.exists():
         cap = cv2.VideoCapture(str(source_video_path))
@@ -251,6 +259,8 @@ def _cached_load_frame_rgb(source_video: str, frame_idx: int):
 
 
 def load_frame_rgb(rec: dict, frame_idx: int, source_video: str | None):
+    if cv2 is None:
+        return None
     if source_video:
         result = _cached_load_frame_rgb(source_video, frame_idx)
         if result is not None:
@@ -583,6 +593,8 @@ def build_segment_clip(
     with_pose_overlay: bool,
     context_frames: int = 30,
 ) -> Path | None:
+    if cv2 is None:
+        return None
     segments_dir = OUT / "segments"
     segments_dir.mkdir(parents=True, exist_ok=True)
 
