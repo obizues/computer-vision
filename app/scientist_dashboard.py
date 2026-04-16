@@ -957,6 +957,16 @@ tab_replay, tab_analytics = st.tabs(["Event Replay", "Analytics & Details"])
 # ═════════════════════════════════════════════════════════════════════════════
 with tab_replay:
     # ── minimal run controls: video dropdown + run button ────────────────────
+    demo_mode = is_demo_mode()
+
+    if demo_mode:
+        st.info(
+            "Hosted demo view: this page shows precomputed mouse interaction events. "
+            "What you are seeing: (1) replay clip with pose overlay, (2) probability trace for that event window, "
+            "and (3) frame-level raw vs overlay views in Analytics. "
+            "To run ingestion + training + scoring end-to-end, run locally from GitHub."
+        )
+
     configured_video = str(CFG.get("pose_inference_runtime", {}).get("video_file", "")).strip()
     if "dashboard_video_path" not in st.session_state:
         st.session_state["dashboard_video_path"] = configured_video
@@ -980,9 +990,10 @@ with tab_replay:
             if not ok:
                 st.error(message)
     else:
-        st.warning(
-            "No local videos found in data/raw_videos. For full replay and pipeline controls, run this project locally and place a video in data/raw_videos (or use launch_mvp.bat)."
-        )
+        if not demo_mode:
+            st.info(
+                "No local videos found in data/raw_videos. Add a video there (or use launch_mvp.bat) to enable full local replay and pipeline runs."
+            )
 
     # ── Run Pipeline button ───────────────────────────────────────────────────
     pipeline_running = (
@@ -990,23 +1001,15 @@ with tab_replay:
         and st.session_state["pipeline_proc"] is not None
         and not st.session_state.get("pipeline_done", True)
     )
-    demo_mode = is_demo_mode()
 
     run_col, status_col = st.columns([2, 5])
     with run_col:
         if pipeline_running:
             st.button("⏳ Pipeline running…", disabled=True, width="stretch")
-        elif demo_mode:
-            st.button("▶ Run Full Pipeline", disabled=True, width="stretch")
-        else:
+        elif not demo_mode:
             if st.button("▶ Run Full Pipeline", type="primary", width="stretch"):
                 launch_pipeline()
                 st.rerun()
-    if demo_mode and not pipeline_running:
-        st.info(
-            "Demo mode is enabled for hosted viewing, so pipeline execution is disabled in this app instance. "
-            "To run ingestion, training, and scoring end-to-end, use the local setup from README and launch the pipeline locally."
-        )
 
     # Drain any pending log lines from the background thread
     if "pipeline_log_q" in st.session_state:
@@ -1187,6 +1190,10 @@ with tab_replay:
                     )
 
             # Videos area (first): fixed overlay-only replay
+            st.caption(
+                "Replay view: pose-overlay event clip for the selected segment. "
+                "Use the selector below to switch detected events."
+            )
             if segment_overlay_clip_path is not None and segment_overlay_clip_path.exists():
                 st.video(
                     str(segment_overlay_clip_path),
@@ -1426,8 +1433,16 @@ with tab_analytics:
                     raw_rgb, overlay_rgb = load_overlay_pair(pose_rec, selected_frame, source_video)
                     if raw_rgb is not None and overlay_rgb is not None:
                         sc1, sc2 = st.columns(2)
-                        sc1.image(raw_rgb, caption=f"Frame {selected_frame} — raw", width="stretch")
-                        sc2.image(overlay_rgb, caption=f"Frame {selected_frame} — pose overlay", width="stretch")
+                        sc1.image(
+                            raw_rgb,
+                            caption=f"Raw camera frame ({selected_frame}) — original pixels",
+                            width="stretch",
+                        )
+                        sc2.image(
+                            overlay_rgb,
+                            caption=f"Pose overlay frame ({selected_frame}) — keypoints drawn on top",
+                            width="stretch",
+                        )
 
                         if active_segment is not None:
                             st.caption("Event segment filmstrip")
