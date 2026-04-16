@@ -1,0 +1,79 @@
+{
+  "project": "mouse-vision-mvp",
+  "dataset": {
+    "name": "MARS pose annotation data",
+    "version": "v1.0",
+    "source": "https://data.caltech.edu/records/j1ww1-mdc55",
+    "top_keypoints_url": "https://data.caltech.edu/records/j1ww1-mdc55/files/MARS_keypoints_top.json",
+    "front_keypoints_url": "https://data.caltech.edu/records/j1ww1-mdc55/files/MARS_keypoints_front.json",
+    "raw_images_top_url": "https://data.caltech.edu/records/j1ww1-mdc55/files/raw_images_top.zip",
+    "top_keypoints_file": "data/MARS_keypoints_top.json",
+    "front_keypoints_file": "data/MARS_keypoints_front.json",
+    "raw_images_top_zip": "data/raw_images_top.zip",
+    "raw_images_top_dir": "data/raw_images_top"
+  },
+  "ingestion": {
+    "storage_mode": "local",
+    "local_video_dir": "data/raw_videos"
+  },
+  "pose_stage": {
+    "mode": "continuous_video_external_inference",
+    "output_top_keypoints_file": "data/processed/pose_top_keypoints.json",
+    "external_pose_file": "data/processed/external_pose_predictions.json",
+    "sample_every_n_frames": 1,
+    "max_frames": 2400
+  },
+  "pose_inference_runtime": {
+    "video_file": "data/raw_videos/mars_top_dataset_sample.mp4",
+    "command": "\".venv-dlc/Scripts/python.exe\" scripts/external_pose_inference_dlc.py --config \"{config}\" --video \"{video}\" --output \"{output}\"",
+    "dlc_command": "\".venv-dlc/Scripts/python.exe\" scripts/external_pose_inference_dlc.py --config \"{config}\" --video \"{video}\" --output \"{output}\"",
+    "dlc": {
+      "project_config": "data/processed/MARS-mro84-2026-04-14/config.yaml",
+      "output_dir": "data/processed/dlc_outputs",
+      "black_id": "mouse1",
+      "white_id": "mouse2",
+      "keypoint_map_file": "",
+      "likelihood_threshold": 0.15,
+      "pretrained_fallback": true,
+      "pretrained_model": "superanimal_topviewmouse",
+      "pretrained_scale": 256,
+      "pretrained_batch_size": 8,
+      "mask_radius": 220
+    },
+    "notes": "Long-video config with lower likelihood threshold and larger mask radius to improve white-mouse retention."
+  },
+  "feature_build": {
+    "view": "top",
+    "keypoints_per_mouse": 7,
+    "target_strategy": "proxy_close_interaction_quantile",
+    "close_interaction_quantile": 0.25
+  },
+  "label_stage": {
+    "ground_truth_labels_file": "data/processed/behavior_labels.csv",
+    "merge_key": "frame_idx",
+    "label_column": "is_close_interaction",
+    "positive_labels": [
+      "close_investigation",
+      "close"
+    ]
+  },
+  "split": {
+    "method": "temporal",
+    "test_size": 0.25,
+    "random_seed": 42,
+    "stratify": true
+  },
+  "model": {
+    "name": "gradient_boosting",
+    "n_estimators": 200,
+    "max_depth": 4,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "standardize": true,
+    "max_iter": 1000
+  },
+  "outputs": {
+    "artifacts_dir": "data/eda_outputs",
+    "run_registry": "data/run_registry.jsonl"
+  }
+}

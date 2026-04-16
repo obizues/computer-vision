@@ -1,0 +1,42 @@
+{
+  "record_type": "mars_pose_frame",
+  "required_fields": [
+    "filename",
+    "width",
+    "height",
+    "labels",
+    "coords"
+  ],
+  "coords_required_mice": [
+    "black",
+    "white"
+  ],
+  "coords_required_axes": [
+    "x",
+    "y"
+  ],
+  "constraints": {
+    "top_view": {
+      "width": 1024,
+      "height": 570,
+      "keypoints_per_mouse": 7
+    },
+    "front_view": {
+      "width": 1280,
+      "height": 500,
+      "keypoints_per_mouse": 7
+    }
+  },
+  "label_contract": {
+    "task_name": "is_close_interaction",
+    "type": "binary",
+    "allowed_values": [0, 1],
+    "definition": "1 when inter-mouse nose distance is less than or equal to configured quantile threshold"
+  },
+  "quality_gates": {
+    "missing_required_fields": 0,
+    "out_of_bounds_keypoints": 0,
+    "unexpected_mouse_ids": 0,
+    "invalid_label_values": 0
+  }
+}

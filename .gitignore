@@ -1,0 +1,43 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+.venv-dlc/
+venv/
+env/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime temp/debug files
+.tmp*.py
+.monitor_pipeline.ps1
+
+# Large/generated inference intermediates
+/data/processed/dlc_outputs/
+/data/raw_videos/
+/data/downloads/
+/data/raw_images_top/
+/data/raw_images_top.zip
+/data/eda_outputs/
+
+# Large binary artifacts
+*.zip
+*.mp4
+*.webm
+*.h5
+*.hdf5
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
