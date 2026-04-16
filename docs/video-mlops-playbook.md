@@ -103,22 +103,22 @@ You should be able to discuss:
 - model metrics are written with timestamp and config reference
 - rerunning with same config reproduces equivalent outputs
 
-## Good interview framing
+## Good PoC framing
 
-### If they ask about building the platform
+### If stakeholders ask about building the platform
 Say:
 - separate raw data from curated training data
 - treat annotations as first-class versioned assets
 - keep pose extraction as a reusable intermediate layer
 - support both research workflows and production batch inference
 
-### If they ask about video specifically
+### If stakeholders ask about video specifically
 Say:
 - video is expensive, so sampling, caching, and derived artifacts matter
 - failure analysis should link metrics back to clips and frames
 - temporal context matters, so clip boundaries and smoothing policies must be explicit
 
-### If they ask about scientists using the system
+### If stakeholders ask about scientists using the system
 Say:
 - optimize for easy relabeling and rapid review
 - expose uncertain predictions for correction

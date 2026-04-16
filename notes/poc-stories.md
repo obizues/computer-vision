@@ -1,26 +1,26 @@
-# Interview Stories
+# PoC Implementation Narratives
 
-## Story 1: Treating video as a product
-I would explain that a mouse monitoring platform should not start with model selection. It should start with a reliable video pipeline: acquisition, metadata, quality checks, annotation workflows, and reproducible derived artifacts. That lets research teams iterate on models without losing traceability.
+## Narrative 1: Treating video as a product
+A mouse monitoring platform should not start with model selection. It should start with a reliable video pipeline: acquisition, metadata, quality checks, annotation workflows, and reproducible derived artifacts. This lets research teams iterate on models without losing traceability.
 
-## Story 2: Why pose is a strategic intermediate
-I would explain that pose is often the right abstraction between raw video and behavior classification. It compresses data volume, improves interpretability, and lets multiple downstream tasks reuse the same representation.
+## Narrative 2: Why pose is a strategic intermediate
+Pose is often the right abstraction between raw video and behavior classification. It compresses data volume, improves interpretability, and lets multiple downstream tasks reuse the same representation.
 
-## Story 3: Human-in-the-loop behavior labeling
-I would describe a loop where uncertain clips are prioritized for review, corrected labels are versioned, and retraining jobs are triggered on a schedule. This turns annotation into a measurable operational process rather than ad hoc cleanup.
+## Narrative 3: Human-in-the-loop behavior labeling
+Use a loop where uncertain clips are prioritized for review, corrected labels are versioned, and retraining jobs are triggered on a schedule. This turns annotation into a measurable operational process rather than ad hoc cleanup.
 
-## Story 4: What can go wrong in mouse video
-I would mention occlusion, bedding changes, reflections, night recording, camera drift, broken timestamps, identity swaps, and inconsistent annotation rules. Then I would explain how I would monitor each one.
+## Narrative 4: Failure modes in mouse video
+Common failure modes include occlusion, bedding changes, reflections, night recording, camera drift, broken timestamps, identity swaps, and inconsistent annotation rules. The PoC should track and report each class of issue.
 
-## Story 5: A simple platform architecture
+## Narrative 5: A simple platform architecture
 - object storage for raw video
 - metadata database for recordings and experiments
 - batch pipeline for frame, clip, and pose extraction
 - annotation store with versioned labels
 - model registry and evaluation reports
-- scientist-facing review UI
+- scientist-facing analysis UI
 
-## Strong questions to ask them
+## Strong questions for stakeholders
 - What is the current unit of prediction: frame, clip, or event?
 - Do you rely more on raw video models or pose-derived models?
 - How often do annotations get revised?
@@ -30,7 +30,7 @@ I would mention occlusion, bedding changes, reflections, night recording, camera
 ## 5-minute architecture walkthrough
 
 1. Input layer
-- I start with versioned pose inputs from `data/MARS_keypoints_top.json` and `data/MARS_keypoints_front.json`.
+- Start with versioned pose inputs from `data/MARS_keypoints_top.json` and `data/MARS_keypoints_front.json`.
 - Data expectations are pinned in `configs/data_contract.json`.
 
 2. Feature layer

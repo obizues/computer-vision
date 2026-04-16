@@ -195,7 +195,7 @@ Machine Vision/
 │   ├── download_data.py          # Download MARS dataset
 │   └── ... (utility scripts)
 ├── notes/
-│   └── interview-stories.md      # Talking points & narrative examples
+│   └── poc-stories.md            # Implementation narratives and walkthrough examples
 ├── launch_mvp.bat                # Windows menu launcher
 ├── requirements.txt              # Python dependencies
 ├── README.md                     # Main project overview
@@ -516,7 +516,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
 
 - **Architecture questions:** See [docs/system-architecture.md](docs/system-architecture.md)
 - **Dataset references:** See [docs/datasets.md](docs/datasets.md)
-- **Interview prep:** See [notes/interview-stories.md](notes/interview-stories.md)
+- **PoC walkthroughs:** See [notes/poc-stories.md](notes/poc-stories.md)
 - **MLOps philosophy:** See [docs/video-mlops-playbook.md](docs/video-mlops-playbook.md)
 
 Good luck! 🧬👀

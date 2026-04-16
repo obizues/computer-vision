@@ -14,7 +14,7 @@ This guide explains:
 
 Keep file names as-is for engineering stability, but use these clearer names when explaining the system:
 
-| Current component | Clear name for interviews | Alias entrypoint |
+| Current component | Clear name for technical walkthroughs | Alias entrypoint |
 |---|---|---|
 | `video_to_pose.py` | Pose Ingestion and Normalization | `scripts/pose_ingestion_normalization.py` |
 | `pose_top_keypoints.json` | Canonical Pose Store | Signals this is the normalized intermediate contract |
@@ -308,7 +308,7 @@ Think of your job as owning the **system lifecycle**, not just one model file.
 
 ---
 
-## 6) Practical architecture mental model for interviews
+## 6) Practical architecture mental model for technical walkthroughs
 
 Use this 5-layer framing:
 
@@ -322,7 +322,7 @@ This framing shows system thinking and MLOps maturity.
 
 ---
 
-## 7) Fast walkthrough you can present tomorrow (60–90 seconds)
+## 7) Fast walkthrough for stakeholder demos (60–90 seconds)
 
 "Our pipeline is config-driven and reproducible. We normalize any pose source into one canonical schema, engineer interaction and motion features, train a baseline logistic regression for close interaction, and publish predictions plus a full run registry entry. The dashboard supports visual QA at frame level and temporal event-segment review. As orchestrator, I control data mode, target policy, split/eval discipline, and lineage so each run is auditable and comparable." 
 

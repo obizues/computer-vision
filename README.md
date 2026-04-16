@@ -1,6 +1,6 @@
-# Mouse Vision Interview Prep
+# Mouse Vision Proof of Concept
 
-This workspace is set up to help you prepare for interviews about computer vision, video pipelines, and MLOps for mouse monitoring systems. It includes a complete ML pipeline for detecting mouse social interactions, a scientist-facing dashboard for review, and reproducible configuration-driven workflows.
+This workspace is a proof of concept for using computer vision to identify mouse social interactions from pose signals. It includes a complete ML pipeline for detecting close interactions, a scientist-facing dashboard for results analysis, and reproducible configuration-driven workflows.
 
 ## Goal
 
@@ -25,7 +25,7 @@ Build enough hands-on understanding that you can discuss:
 | **Explore results in the dashboard** | [DEVELOPER.md → Running the Dashboard](DEVELOPER.md#running-the-dashboard) |
 | **Understand the system architecture** | [docs/system-architecture.md](docs/system-architecture.md) |
 | **Add a new feature to the model** | [DEVELOPER.md → Adding a new feature](DEVELOPER.md#adding-a-new-feature) |
-| **Deploy to Streamlit Cloud for review** | [Demo-ready hosting](#demo-ready-hosting-for-hiring-review) section below |
+| **Deploy to Streamlit Cloud for PoC viewing** | [PoC hosting](#poc-hosting-streamlit-viewer) section below |
 | **Contribute code changes** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## Quick Links
@@ -33,7 +33,7 @@ Build enough hands-on understanding that you can discuss:
 - **For developers:** See [DEVELOPER.md](DEVELOPER.md) for setup, running, and extending the code
 - **For architects:** See [docs/system-architecture.md](docs/system-architecture.md) for technical design  
 - **For contributors:** See [CONTRIBUTING.md](CONTRIBUTING.md) for collaboration guidelines
-- **For reviewers:** See "[Demo-ready hosting](#demo-ready-hosting-for-hiring-review)" section below
+- **For PoC viewers:** See "[PoC hosting](#poc-hosting-streamlit-viewer)" section below
 
 **Documentation:**
 - [DEVELOPER.md](DEVELOPER.md) — **Start here** for environment setup, running pipeline & dashboard, making changes
@@ -41,8 +41,8 @@ Build enough hands-on understanding that you can discuss:
 - [README.md](README.md) — This file; overview, quick start, configuration reference
 - [docs/datasets.md](docs/datasets.md) — Real mouse video datasets and what each is good for
 - [docs/system-architecture.md](docs/system-architecture.md) — Technical design, model inventory, orchestrator responsibilities
-- [docs/video-mlops-playbook.md](docs/video-mlops-playbook.md) — MLOps patterns, deployment strategies, interview talking points
-- [notes/interview-stories.md](notes/interview-stories.md) — Reusable stories and answers for interviews
+- [docs/video-mlops-playbook.md](docs/video-mlops-playbook.md) — MLOps patterns and deployment strategies for video behavior systems
+- [notes/poc-stories.md](notes/poc-stories.md) — Reusable implementation narratives for presenting this proof of concept
 
 **Code:**
 - [scripts/](scripts) — Pipeline stages (pose ingestion, feature building, training, inference)
@@ -75,7 +75,7 @@ Build enough hands-on understanding that you can discuss:
 - Prepare answers about data versioning, retraining, and deployment
 
 ### Day 5
-- Rehearse 3 stories from [notes/interview-stories.md](notes/interview-stories.md)
+- Review 3 implementation narratives from [notes/poc-stories.md](notes/poc-stories.md)
 
 ## If you want to go deeper
 
@@ -86,7 +86,7 @@ A strong demo project is:
 - define a labeling schema
 - store annotations in a reproducible format
 - train or fine-tune a simple behavior classifier
-- expose inference as a batch job plus review dashboard
+- expose inference as a batch job plus analysis dashboard
 
 ## MVP Success Criteria
 
@@ -215,9 +215,9 @@ Open browser to: `http://localhost:8501`
 - **Analytics & Details** — Model metrics, data quality, full-timeline probability chart, frame-level review
 - **Artifacts** — Links to model files, predictions, quality reports
 
-## Demo-ready hosting (for hiring review)
+## PoC hosting (Streamlit viewer)
 
-Use this when you want a clean hosted experience for reviewers.
+Use this when you want a clean hosted experience for stakeholders.
 
 ### 1) Local prep before pushing
 
@@ -252,14 +252,14 @@ Notes:
 - Streamlit hosted mode is intended for viewing precomputed results, not running full DLC inference in-app.
 - Local runtime can still auto-download this sample video using `pose_inference_runtime.video_url` if `video_file` is missing.
 
-### 4) Reviewer walkthrough (30–60 seconds)
+### 4) Stakeholder walkthrough (30–60 seconds)
 
 - Open Event Replay tab
 - Select a segment and replay Raw vs Overlay
 - Scroll to probability trace for the selected segment
 - Open Analytics tab for model/data-quality summary
 
-This demonstrates end-to-end ownership (pipeline + UX + diagnostics) without requiring heavy inference on the hosted environment.
+This demonstrates end-to-end PoC capability (pipeline + UX + diagnostics) without requiring heavy inference on the hosted environment.
 
 ## Windows launcher
 
