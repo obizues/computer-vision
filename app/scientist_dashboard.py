@@ -920,6 +920,19 @@ def list_local_videos() -> list[str]:
 
 
 st.title("Mouse Behavior Analytics Dashboard")
+st.markdown(
+    """
+    <style>
+    h1 {
+        margin-bottom: 0.25rem;
+    }
+    div[data-testid="stAlert"] {
+        margin-bottom: 0.25rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 summary_path = OUT / "baseline_model_summary.json"
 quality_path = OUT / "feature_quality_report.json"
