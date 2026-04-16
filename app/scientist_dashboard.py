@@ -597,11 +597,30 @@ def find_precomputed_clip(
     if not segments_dir.exists():
         return None
     
-    # Try common video formats
+    # Try exact expected filenames first.
     for suffix in [".webm", ".mp4"]:
         clip_path = segments_dir / f"segment_{segment_id}_{mode_tag}_ctx{context_frames}_{clip_start}_{clip_end}{suffix}"
         if clip_path.exists() and clip_path.stat().st_size > 0:
             return clip_path
+
+    # Fallback: any precomputed clip for this segment/mode (useful when
+    # precomputed frame span/context differs from currently selected span).
+    fallback_candidates = sorted(
+        [
+            path
+            for path in segments_dir.glob(f"segment_{segment_id}_{mode_tag}_*.webm")
+            if path.is_file() and path.stat().st_size > 0
+        ]
+        + [
+            path
+            for path in segments_dir.glob(f"segment_{segment_id}_{mode_tag}_*.mp4")
+            if path.is_file() and path.stat().st_size > 0
+        ],
+        key=lambda p: p.stat().st_size,
+        reverse=True,
+    )
+    if fallback_candidates:
+        return fallback_candidates[0]
     return None
 
 
@@ -968,24 +987,26 @@ with tab_replay:
 
             segment_overlay_clip_path = None
             segment_raw_clip_path = None
+            # First, try to find precomputed clips (generated during pipeline run).
+            # This path is used by hosted demo mode and does not require local source video.
+            segment_overlay_clip_path = find_precomputed_clip(
+                segment_id=selected_segment_id,
+                mode_tag="overlay",
+                clip_start=start_frame,
+                clip_end=end_frame,
+                context_frames=clip_context_frames,
+            )
+            segment_raw_clip_path = find_precomputed_clip(
+                segment_id=selected_segment_id,
+                mode_tag="raw",
+                clip_start=start_frame,
+                clip_end=end_frame,
+                context_frames=clip_context_frames,
+            )
+
+            # If precomputed clips are missing, try to build them only when local
+            # source video and cv2 are available.
             if source_video_path is not None and source_video_path.exists() and pose_index:
-                # First, try to find precomputed clips (generated during pipeline run)
-                segment_overlay_clip_path = find_precomputed_clip(
-                    segment_id=selected_segment_id,
-                    mode_tag="overlay",
-                    clip_start=start_frame,
-                    clip_end=end_frame,
-                    context_frames=clip_context_frames,
-                )
-                segment_raw_clip_path = find_precomputed_clip(
-                    segment_id=selected_segment_id,
-                    mode_tag="raw",
-                    clip_start=start_frame,
-                    clip_end=end_frame,
-                    context_frames=clip_context_frames,
-                )
-                
-                # If precomputed clips not found and cv2 is available, try to build them
                 if segment_overlay_clip_path is None and cv2 is not None:
                     segment_overlay_clip_path = build_segment_clip(
                         source_video_path=source_video_path,
