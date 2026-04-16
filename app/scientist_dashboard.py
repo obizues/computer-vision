@@ -1080,22 +1080,35 @@ with tab_replay:
                     segments_df["segment_id"] = range(1, len(segments_df) + 1)
 
         if not segments_df.empty:
-            # Filter by both-mice visibility AND low nose_dist (close together)
-            keep_mask = segments_df.apply(
-                lambda row: (
-                    segment_has_both_mice(
+            sparse_candidates = len(segments_df) < 3
+
+            # Use a strict filter when we have enough candidates. If sparse,
+            # require bilateral visibility only so replay still has useful events.
+            if sparse_candidates:
+                keep_mask = segments_df.apply(
+                    lambda row: segment_has_both_mice(
                         pose_index,
                         int(row["start_frame"]),
                         int(row["end_frame"]),
-                    )
-                    and segment_has_low_nose_dist(
-                        features_df,
-                        int(row["start_frame"]),
-                        int(row["end_frame"]),
-                    )
-                ),
-                axis=1,
-            )
+                    ),
+                    axis=1,
+                )
+            else:
+                keep_mask = segments_df.apply(
+                    lambda row: (
+                        segment_has_both_mice(
+                            pose_index,
+                            int(row["start_frame"]),
+                            int(row["end_frame"]),
+                        )
+                        and segment_has_low_nose_dist(
+                            features_df,
+                            int(row["start_frame"]),
+                            int(row["end_frame"]),
+                        )
+                    ),
+                    axis=1,
+                )
             segments_df = segments_df[keep_mask].reset_index(drop=True)
 
         if segments_df.empty:
