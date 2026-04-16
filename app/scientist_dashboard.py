@@ -1054,13 +1054,35 @@ with tab_replay:
     if pred_df.empty:
         st.warning("No predictions found yet. Run the pipeline first.")
     else:
+        desired_min_segments = 8
         confidence_threshold = float(st.session_state.get("confidence_threshold", 0.75))
         segments_df = pd.DataFrame()
         if "y_proba_close" in pred_df.columns and "frame_idx" in pred_df.columns:
             segments_df = build_event_segments(pred_df, confidence_threshold)
 
-        if len(segments_df) < 3 and not features_df.empty:
-            distance_quantile = float(CFG.get("feature_build", {}).get("close_interaction_quantile", 0.075))
+        if len(segments_df) < desired_min_segments and "y_proba_close" in pred_df.columns and "frame_idx" in pred_df.columns:
+            backoff_thresholds = [0.70, 0.65, 0.60, 0.55, 0.50]
+            extras: list[pd.DataFrame] = []
+            for th in backoff_thresholds:
+                if float(th) >= float(confidence_threshold):
+                    continue
+                extra = build_event_segments(pred_df, float(th))
+                if not extra.empty:
+                    extras.append(extra)
+                if len(segments_df) + sum(len(x) for x in extras) >= desired_min_segments:
+                    break
+            if extras:
+                segments_df = pd.concat([segments_df] + extras, ignore_index=True)
+                segments_df = (
+                    segments_df
+                    .sort_values(["start_frame", "end_frame", "peak_proba"], ascending=[True, True, False])
+                    .drop_duplicates(subset=["start_frame", "end_frame"], keep="first")
+                    .reset_index(drop=True)
+                )
+                segments_df["segment_id"] = range(1, len(segments_df) + 1)
+
+        if len(segments_df) < desired_min_segments and not features_df.empty:
+            distance_quantile = float(CFG.get("feature_build", {}).get("close_interaction_quantile", 0.25))
             distance_segments = build_distance_segments(
                 features_df=features_df,
                 pred_df=pred_df,
@@ -1088,7 +1110,13 @@ with tab_replay:
                 ),
                 axis=1,
             )
-            segments_df = segments_df[keep_mask].reset_index(drop=True)
+            filtered_segments_df = segments_df[keep_mask].reset_index(drop=True)
+            if len(filtered_segments_df) >= 3:
+                segments_df = filtered_segments_df
+
+        if not segments_df.empty:
+            segments_df = segments_df.sort_values(["peak_proba", "num_frames"], ascending=[False, False]).reset_index(drop=True)
+            segments_df["segment_id"] = range(1, len(segments_df) + 1)
 
         if segments_df.empty:
             st.info("No segments detected with current predictions.")
