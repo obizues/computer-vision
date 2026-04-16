@@ -323,6 +323,62 @@ def build_event_segments(pred_df: pd.DataFrame, threshold: float) -> pd.DataFram
     return segments
 
 
+def build_distance_segments(
+    features_df: pd.DataFrame,
+    pred_df: pd.DataFrame,
+    distance_quantile: float,
+) -> pd.DataFrame:
+    required_cols = {"frame_idx", "nose_dist"}
+    if features_df.empty or not required_cols.issubset(features_df.columns):
+        return pd.DataFrame(columns=["segment_id", "start_frame", "end_frame", "num_frames", "duration_frames", "peak_proba", "mean_proba"])
+
+    valid = features_df[
+        features_df["nose_dist"].notna() & (features_df["nose_dist"] > 0)
+    ][["frame_idx", "nose_dist"]].copy()
+    if valid.empty:
+        return pd.DataFrame(columns=["segment_id", "start_frame", "end_frame", "num_frames", "duration_frames", "peak_proba", "mean_proba"])
+
+    threshold = float(valid["nose_dist"].quantile(float(distance_quantile)))
+    low = valid[valid["nose_dist"] <= threshold][["frame_idx"]].drop_duplicates().sort_values("frame_idx").reset_index(drop=True)
+    if low.empty:
+        return pd.DataFrame(columns=["segment_id", "start_frame", "end_frame", "num_frames", "duration_frames", "peak_proba", "mean_proba"])
+
+    frame_diffs = valid["frame_idx"].diff().dropna()
+    positive_diffs = frame_diffs[frame_diffs > 0]
+    expected_step = int(positive_diffs.median()) if not positive_diffs.empty else 1
+    if expected_step <= 0:
+        expected_step = 1
+
+    proba_by_frame: dict[int, float] = {}
+    if "frame_idx" in pred_df.columns and "y_proba_close" in pred_df.columns:
+        proba_by_frame = (
+            pred_df[["frame_idx", "y_proba_close"]]
+            .drop_duplicates(subset=["frame_idx"], keep="last")
+            .set_index("frame_idx")["y_proba_close"]
+            .to_dict()
+        )
+
+    low["y_proba_close"] = low["frame_idx"].map(proba_by_frame).fillna(0.0)
+    low["new_segment"] = low["frame_idx"].diff().fillna(expected_step + 1) > expected_step
+    low["segment_id"] = low["new_segment"].cumsum().astype(int)
+
+    segments = (
+        low.groupby("segment_id", as_index=False)
+        .agg(
+            start_frame=("frame_idx", "min"),
+            end_frame=("frame_idx", "max"),
+            num_frames=("frame_idx", "count"),
+            peak_proba=("y_proba_close", "max"),
+            mean_proba=("y_proba_close", "mean"),
+        )
+        .sort_values("start_frame")
+        .reset_index(drop=True)
+    )
+    segments["duration_frames"] = segments["end_frame"] - segments["start_frame"] + expected_step
+    segments = _merge_nearby_segments(segments, max_gap_frames=2)
+    return segments
+
+
 def _merge_nearby_segments(segments_df: pd.DataFrame, max_gap_frames: int = 2) -> pd.DataFrame:
     """Merge segments separated by <= max_gap_frames into continuous events."""
     if segments_df.empty or len(segments_df) < 2:
@@ -1002,6 +1058,26 @@ with tab_replay:
         segments_df = pd.DataFrame()
         if "y_proba_close" in pred_df.columns and "frame_idx" in pred_df.columns:
             segments_df = build_event_segments(pred_df, confidence_threshold)
+
+        if len(segments_df) < 3 and not features_df.empty:
+            distance_quantile = float(CFG.get("feature_build", {}).get("close_interaction_quantile", 0.075))
+            distance_segments = build_distance_segments(
+                features_df=features_df,
+                pred_df=pred_df,
+                distance_quantile=distance_quantile,
+            )
+            if not distance_segments.empty:
+                if segments_df.empty:
+                    segments_df = distance_segments
+                else:
+                    segments_df = pd.concat([segments_df, distance_segments], ignore_index=True)
+                    segments_df = (
+                        segments_df
+                        .sort_values(["start_frame", "end_frame", "peak_proba"], ascending=[True, True, False])
+                        .drop_duplicates(subset=["start_frame", "end_frame"], keep="first")
+                        .reset_index(drop=True)
+                    )
+                    segments_df["segment_id"] = range(1, len(segments_df) + 1)
 
         if not segments_df.empty:
             # Filter by both-mice visibility AND low nose_dist (close together)
