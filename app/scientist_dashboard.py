@@ -1054,7 +1054,7 @@ with tab_replay:
     if pred_df.empty:
         st.warning("No predictions found yet. Run the pipeline first.")
     else:
-        confidence_threshold = float(st.session_state.get("confidence_threshold", 0.85))
+        confidence_threshold = float(st.session_state.get("confidence_threshold", 0.75))
         segments_df = pd.DataFrame()
         if "y_proba_close" in pred_df.columns and "frame_idx" in pred_df.columns:
             segments_df = build_event_segments(pred_df, confidence_threshold)
@@ -1080,35 +1080,14 @@ with tab_replay:
                     segments_df["segment_id"] = range(1, len(segments_df) + 1)
 
         if not segments_df.empty:
-            sparse_candidates = len(segments_df) < 3
-
-            # Use a strict filter when we have enough candidates. If sparse,
-            # require bilateral visibility only so replay still has useful events.
-            if sparse_candidates:
-                keep_mask = segments_df.apply(
-                    lambda row: segment_has_both_mice(
-                        pose_index,
-                        int(row["start_frame"]),
-                        int(row["end_frame"]),
-                    ),
-                    axis=1,
-                )
-            else:
-                keep_mask = segments_df.apply(
-                    lambda row: (
-                        segment_has_both_mice(
-                            pose_index,
-                            int(row["start_frame"]),
-                            int(row["end_frame"]),
-                        )
-                        and segment_has_low_nose_dist(
-                            features_df,
-                            int(row["start_frame"]),
-                            int(row["end_frame"]),
-                        )
-                    ),
-                    axis=1,
-                )
+            keep_mask = segments_df.apply(
+                lambda row: segment_has_both_mice(
+                    pose_index,
+                    int(row["start_frame"]),
+                    int(row["end_frame"]),
+                ),
+                axis=1,
+            )
             segments_df = segments_df[keep_mask].reset_index(drop=True)
 
         if segments_df.empty:
@@ -1266,8 +1245,8 @@ with tab_analytics:
         qcols[3].metric("Out-of-bounds Y", str(q.get("out_of_bounds_y", "n/a")))
 
     if not pred_df.empty:
-        # re-compute segments using latest threshold (defaults to 0.80 if tab_replay not visited)
-        _threshold = st.session_state.get("_analytics_threshold", 0.85)
+        # re-compute segments using latest threshold (defaults to 0.75 if tab_replay not visited)
+        _threshold = st.session_state.get("_analytics_threshold", 0.75)
         if "y_proba_close" in pred_df.columns:
             _threshold = st.slider(
                 "Threshold (analytics view)",
